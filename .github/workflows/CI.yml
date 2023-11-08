@@ -1,0 +1,39 @@
+name: NodeJS with Webpack
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [18.x]
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Build package
+      run: |
+        npm config set legacy-peer-deps true
+        npm install
+
+    - name: Build Docker images /absendulu_gateway_prod:v.1
+      run: |
+        docker build . --file Dockerfile --tag absenduludocker/absendulu_fe_prod:v.1
+      
+    - name: Login to Docker registry
+      run: docker login -u absenduludocker -p 'FX$5EcRwwQUxnx6r'
+
+    - name: Push Docker images
+      run: |
+        docker push absenduludocker/absendulu_fe_prod:v.1

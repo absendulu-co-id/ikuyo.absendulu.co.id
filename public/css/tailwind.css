@@ -1,0 +1,116 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+#floating-ui-root {
+    > div {
+        z-index: 50 !important;
+    }
+}
+
+.react-datepicker__tab-loop {
+    position: absolute;
+    top: 0;
+}
+
+.react-datepicker__day--selected {
+    border-radius: 0.3rem;
+    background-color: #66bb6a !important;
+    color: #fff;
+}
+.css-1igvx5z-timeSelected-time-TopBar {
+    color: #46a24a !important;
+}
+
+.css-nntsr1-time {
+    color: #46a24a !important;
+}
+
+.css-rt16tf-timeSelected-time {
+    color: #46a24a !important;
+}
+
+.Toastify__toast-container {
+    z-index: 10000;
+}
+
+.rounded-checkbox {
+    /* width:35px;
+    height: 35px; */
+    border-radius: 46%;
+    vertical-align: middle;
+    border: 1px solid rgb(176, 190, 197);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .rounded-checkbox:checked {
+    appearance: auto;
+    clip-path: circle(46% at 50% 50%);
+  }
+
+  .control {
+    font-family: arial;
+    display: block;
+    position: relative;
+    padding-left: 30px;
+    margin-bottom: 5px;
+    padding-top: 0px;
+    cursor: pointer;
+    font-size: 16px;
+}
+    .control input {
+        position: absolute;
+        z-index: -1;
+        opacity: 0;
+    }
+.control_indicator {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    height: 20px;
+    width: 20px;
+    background: #e7e7e7;
+    border: 0px solid #b0bec5;
+    border-radius: 6px;
+}
+.control:hover input ~ .control_indicator,
+.control input:focus ~ .control_indicator {
+    background: #cccccc;
+}
+
+.control input:checked ~ .control_indicator {
+    background: #4caf50;
+}
+.control:hover input:not([disabled]):checked ~ .control_indicator,
+.control input:checked:focus ~ .control_indicator {
+    background: "#0e6647d";
+}
+.control input:disabled ~ .control_indicator {
+    background: #e6e6e6;
+    opacity: 0.6;
+    pointer-events: none;
+}
+.control_indicator:after {
+    box-sizing: unset;
+    content: '';
+    position: absolute;
+    display: none;
+}
+.control input:checked ~ .control_indicator:after {
+    display: block;
+}
+.control-checkbox .control_indicator:after {
+    left: 8px;
+    top: 4px;
+    width: 3px;
+    height: 8px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+.control-checkbox input:disabled ~ .control_indicator:after {
+    border-color: #7b7b7b;
+}

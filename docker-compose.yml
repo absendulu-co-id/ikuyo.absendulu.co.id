@@ -1,0 +1,12 @@
+version: '3.4'
+
+services:
+  absendulufe:
+    image: absendulu_fe
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      NODE_ENV: development
+    ports:
+      - 8000:8000
