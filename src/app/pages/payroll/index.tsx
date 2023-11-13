@@ -89,7 +89,6 @@ const [allPayrollIds, setAllPayrollIds] = useState<Array<String>>([]);
         {/* Start New Tabs */}
         <div className="flex flex-row space-between m-1">
           {keyTab.map((list: any, index: number) => {
-
             return (
                 <div
                   key={`keyTab-header-${index}`}
@@ -100,7 +99,6 @@ const [allPayrollIds, setAllPayrollIds] = useState<Array<String>>([]);
                   <Typography variant={'h4'} color={'green'}>
                     {list.label}
                   </Typography>   
-
                 </div>
             )
           })}

@@ -7,13 +7,13 @@ import {
     ChevronDownIcon,
     ArrowPathIcon,
 } from "@heroicons/react/24/solid";
-import { 
+import {
     Accordion,
     AccordionHeader,
     AccordionBody,
     Button,
-    Card, 
-    CardBody, 
+    Card,
+    CardBody,
     Chip,
     Input,
     Spinner,
@@ -32,6 +32,8 @@ import {
 import { snackBar } from "@/utils/snackbar";
 import { isEmpty } from "@/utils/locDash";
 import Badge from "@/app/components/molecules/Badge";
+import { useSelector } from "react-redux";
+import { getDataEmployee } from "@/app/services/company/employee";
 
 interface keyable {
     [key: string]: any;
@@ -51,6 +53,7 @@ const CreatePayroll = ({
     const animatedComponents = makeAnimated();
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [positionData, setPositionData] = useState<Array<keyable>>([]);
+    const [payrollType, setPayrollType] = useState<Array<keyable>>([]);
 
     const defaultIncomeType = [
         {
@@ -84,6 +87,7 @@ const CreatePayroll = ({
             bgColor: "amber",
         }
     ];
+
     const [incomeType, setIncomeType] = useState<any>(defaultIncomeType);
     const handleDeleteIncomeType = (index) => {
         let data = [...incomeType];
@@ -120,11 +124,22 @@ const CreatePayroll = ({
             bgColor: "blue",
         },
         {
-            label: 'BPJS Ketenagakerjaan'   ,
+            label: 'BPJS Ketenagakerjaan',
             value: '4',
             mandatory: true,
             bgColor: "amber",
         }
+    ];
+
+    const payrollTypeSelect = [
+        {
+            label: 'Monthly',
+            value: 'Monthly',
+        },
+        {
+            label: 'Daily',
+            value: 'Daily',
+        },
     ];
     const [deductionType, setDeductionType] = useState<any>(defaultDeductionType);
     const handleDeleteDeductionType = (index) => {
@@ -143,31 +158,31 @@ const CreatePayroll = ({
 
     const customStyles = {
         control: (base: any) => ({
-          ...base,
-          background: "rgb(245 245 245)",
-          // match with the menu
-          borderRadius: "5px",
-          // Overwrittes the different states of border
-          borderColor: "rgb(102 187 106)",
-          // Removes weird border around container
-          boxShadow: null,
-          "&:hover": {
+            ...base,
+            background: "rgb(245 245 245)",
+            // match with the menu
+            borderRadius: "5px",
             // Overwrittes the different states of border
-            borderColor: "rgb(76 175 80)"
-          }
+            borderColor: "rgb(102 187 106)",
+            // Removes weird border around container
+            boxShadow: null,
+            "&:hover": {
+                // Overwrittes the different states of border
+                borderColor: "rgb(76 175 80)"
+            }
         }),
         menu: (base: any) => ({
-          ...base,
-          // override border radius to match the box
-          borderRadius: 0,
-          // kill the gap
-          marginTop: 0
+            ...base,
+            // override border radius to match the box
+            borderRadius: 0,
+            // kill the gap
+            marginTop: 0
         }),
         menuList: (base: any) => ({
-          ...base,
-          // kill the white space on first and last option
-          padding: 0,
-          maxHeight: '140px',
+            ...base,
+            // kill the white space on first and last option
+            padding: 0,
+            maxHeight: '140px',
         }),
         option: (base: any, state: { isFocused: any; }) => ({
             ...base,
@@ -184,12 +199,12 @@ const CreatePayroll = ({
     }
 
     const handleAddProperties = () => {
-        let newProperties = { name: "", amount: ""};
+        let newProperties = { name: "", amount: "" };
         setProperties([...properties, newProperties]);
     }
 
     const handleAddDeductions = () => {
-        let newDeductions = { name: "", amount: ""};
+        let newDeductions = { name: "", amount: "" };
         setDeductions([...deductions, newDeductions]);
     }
 
@@ -317,7 +332,7 @@ const CreatePayroll = ({
         try {
             const dataAll = await getDataPosition() as GetPositionResponse;
             const mappedDataAll = dataAll.data.map((list) => {
-                return { label: `${list.departmentName} - ${list.positionName}`, value: list.id}
+                return { label: `${list.departmentName} - ${list.positionName}`, value: list.id }
             })
             setPositionData(mappedDataAll);
         } catch (err) {
@@ -326,12 +341,12 @@ const CreatePayroll = ({
 
     useEffect(() => {
         getPositionAll();
-      }, []);
+    }, []);
 
     const lastIndexProperties = properties.length - 1;
     const lastIndexDeductions = deductions.length - 1;
 
-    const noData = form?.positionId === '' && typeof form?.positionId === 'string' && form?.positionId.length === 0 && form?.positionName=== '' && typeof form?.positionName === 'string' && form?.positionName.length === 0;
+    const noData = form?.positionId === '' && typeof form?.positionId === 'string' && form?.positionId.length === 0 && form?.positionName === '' && typeof form?.positionName === 'string' && form?.positionName.length === 0;
 
     const resetValueForm = () => {
         setForm({ positionId: '', positionName: '' });
@@ -407,7 +422,7 @@ const CreatePayroll = ({
         setFormError(errorMsg);
         setFormDeductionsError(errorDeductionMsg);
         if (isPropertiesError || isDeductionsError) return false;
-      
+
         const newObj = properties.reduce((accumulator: any, currentValue: any) => {
             accumulator[currentValue.name] = Number(currentValue.amount.split('.').join(""));
             return accumulator;
@@ -424,12 +439,13 @@ const CreatePayroll = ({
             positionName: form.positionName,
             properties: newObj,
             deductions: newObjDeduction,
+            payrollType: form.payrollType
         };
 
         setIsLoading(true);
         try {
             const response = await postDataPayroll(submittedForm);
-            
+
             if (response && response.message === "Success") {
                 snackBar('success', 'Payroll saved successfully');
                 resetValueForm();
@@ -546,8 +562,8 @@ const CreatePayroll = ({
                 <Typography color={'green'} variant={'h4'}>
                     {dataEdit ? "Edit" : "Create"} Payroll Model
                 </Typography>
-               
-                
+
+
                 <div className="border border-green-400 rounded-xl mt-4 bg-gray-100">
                     <div className={'p-1 bg-green-400 rounded-tl-lg rounded-br-xl w-60'} >
                         <Typography className={'text-center'} variant={'lead'} color={'white'}>
@@ -556,7 +572,7 @@ const CreatePayroll = ({
                     </div>
 
                     {/* Start Input Income */}
-                    
+
                     <div className="flex flex-row m-4">
                         <Accordion
                             open={openAccordion}
@@ -608,7 +624,7 @@ const CreatePayroll = ({
                                                     <Typography
                                                         variant="small"
                                                         className="font-bold uppercase text-white "
-                                                        >
+                                                    >
                                                         {'ADD'}
                                                     </Typography>
                                                     <PlusIcon strokeWidth={4} className="h-5 w-5 mr-2" />
@@ -631,7 +647,7 @@ const CreatePayroll = ({
                                                     <Badge
                                                         content={"x"}
                                                         onClick={() => handleDeleteIncomeType(index)}
-                                                        // bgColor="red"
+                                                    // bgColor="red"
                                                     >
                                                         <Chip
                                                             value={list.label}
@@ -652,43 +668,43 @@ const CreatePayroll = ({
                     {/* End Input Income Type */}
 
                     {/* Start properties */}
-                        <div className="flex flex-col m-4 gap-4">
-                            <div>
-                                <Typography variant={'paragraf'} className={'mb-1.5'}>
-                                    Position
+                    <div className="flex flex-col m-4 gap-4">
+                        <div>
+                            <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                Position
+                            </Typography>
+
+                            <Select
+                                onChange={(selected: any) => {
+                                    setForm((prevValue) => {
+                                        return {
+                                            ...prevValue,
+                                            positionId: selected.value,
+                                            positionName: selected.label,
+                                        }
+                                    })
+                                    setPositionError(false);
+
+                                }}
+                                options={positionData}
+                                value={!isEmpty(form.positionName) ? { label: form.positionName, value: form.positionId } : null}
+                                placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Position ...</Typography>}
+                                {...SelectProps}
+                            />
+                            {positionError && (
+                                <Typography variant="small" color="red">
+                                    Please select position
                                 </Typography>
-                            
-                                <Select
-                                    onChange={(selected: any) => {
-                                        setForm((prevValue) => {
-                                            return {
-                                                ...prevValue,
-                                                positionId: selected.value,
-                                                positionName: selected.label,
-                                            }
-                                        })
-                                        setPositionError(false);
+                            )}
+                        </div>
+                        {properties.map((list, index) => {
 
-                                    }}
-                                    options={positionData}
-                                    value={!isEmpty(form.positionName) ? { label: form.positionName, value: form.positionId } : null}
-                                    placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Position ...</Typography>}
-                                    {...SelectProps}
-                                />
-                                {positionError && (
-                                    <Typography variant="small" color="red">
-                                        Please select position
-                                    </Typography>
-                                )}
-                            </div>
-                            {properties.map((list, index) => {
-
-                                return (
-                                    <div key={`properties-${index}`}>
+                            return (
+                                <div key={`properties-${index}`}>
 
                                     <div className="flex flex-row justify-between gap-4">
                                         <div className="w-full">
-                                            <Typography variant={'paragraf'} className={'mb-1.5'}>
+                                            <Typography variant={'paragraph'} className={'mb-1.5'}>
                                                 Income type
                                             </Typography>
 
@@ -713,39 +729,39 @@ const CreatePayroll = ({
                                                 </div>
                                             ))}
                                         </div>
-                                        
+
                                         <div className="w-full">
-                                            <Typography variant={'paragraf'} className={'mb-1.5'}>
+                                            <Typography variant={'paragraph'} className={'mb-1.5'}>
                                                 {'Amount'}
                                             </Typography>
-                                            
+
                                             <div className="relative flex w-full max-w-full">
-                                            <Button
-                                                ripple={false}
-                                                variant="text"
-                                                color="blue-gray"
-                                                className="flex h-10 items-center gap-2 rounded-r-none border border-r-0 border-green-500 bg-blue-gray-500/10 pl-3 w-2"
-                                            >
-                                                <Typography className="text-green-500 font-normal" variant={'small'}>
-                                                    Rp
-                                                </Typography>
-                                            </Button>
-                                            <Input
-                                                className="rounded-l-none !border-t-green-500 focus:!border-t-green-500 placeholder:text-green-500"
-                                                labelProps={{
-                                                    className: "before:content-none after:content-none",
-                                                }}
-                                                containerProps={{ className: "min-w-0" }}
-                                                type={'tel'}
-                                                success
-                                                size="md"
-                                                onChange={(event) => handleFormChange(index, event, "amount")}
-                                                name="amount"
-                                                value={list.amount}
-                                                crossOrigin={undefined}
-                                                placeholder="Type amount ..."
-                                            />
-                                        </div>
+                                                <Button
+                                                    ripple={false}
+                                                    variant="text"
+                                                    color="blue-gray"
+                                                    className="flex h-10 items-center gap-2 rounded-r-none border border-r-0 border-green-500 bg-blue-gray-500/10 pl-3 w-2"
+                                                >
+                                                    <Typography className="text-green-500 font-normal" variant={'small'}>
+                                                        Rp
+                                                    </Typography>
+                                                </Button>
+                                                <Input
+                                                    className="rounded-l-none !border-t-green-500 focus:!border-t-green-500 placeholder:text-green-500"
+                                                    labelProps={{
+                                                        className: "before:content-none after:content-none",
+                                                    }}
+                                                    containerProps={{ className: "min-w-0" }}
+                                                    type={'tel'}
+                                                    success
+                                                    size="md"
+                                                    onChange={(event) => handleFormChange(index, event, "amount")}
+                                                    name="amount"
+                                                    value={list.amount}
+                                                    crossOrigin={undefined}
+                                                    placeholder="Type amount ..."
+                                                />
+                                            </div>
                                             {formError.map((listError: any, indexError) => (
                                                 <div key={`listError${indexError}`}>
                                                     {index === indexError && (
@@ -758,11 +774,11 @@ const CreatePayroll = ({
                                         </div>
 
                                         <div className="flex flex-row items-center gap-2 w-36 mt-10">
-                                            
+
                                             {properties.length > 1 && (
                                                 <div className="mb-2">
                                                     <TrashIcon
-                                                        onClick={() => handleDeleteProperties(index)} 
+                                                        onClick={() => handleDeleteProperties(index)}
                                                         className={'w-5 h-5 cursor-pointer text-red-500'}
                                                     />
                                                 </div>
@@ -770,8 +786,8 @@ const CreatePayroll = ({
 
                                             {lastIndexProperties === index && (
                                                 <div className="mb-2">
-                                                    <PlusCircleIcon 
-                                                        onClick={handleAddProperties} 
+                                                    <PlusCircleIcon
+                                                        onClick={handleAddProperties}
                                                         className={'w-5 h-5 cursor-pointer text-blue-500'}
                                                     />
                                                 </div>
@@ -780,14 +796,62 @@ const CreatePayroll = ({
 
                                         </div>
 
-                                        
+
                                     </div>
                                 </div>
-                                )
-                            })}
+                            )
+                        })}
+                        <div>
+                            <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                Payroll Type
+                            </Typography>
 
-                            
+                            <Select
+                                onChange={(selected: any) => {
+                                    setForm((prevValue) => {
+                                        return {
+                                            ...prevValue,
+                                            payrollType: selected.value,
+                                            payrollTypeLabel: selected.label
+                                        }
+                                    })
+                                    setPositionError(false);
+
+                                }}
+                                options={payrollTypeSelect}
+                                value={!isEmpty(form.payrollType) ? { label: form.payrollTypeLabel, value: form.payrollType } : null}
+                                placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Payroll Type ...</Typography>}
+                                {...SelectProps}
+                            />
+                            {positionError && (
+                                <Typography variant="small" color="red">
+                                    Please select Payrol Type
+                                </Typography>
+                            )}
                         </div>
+                        <div>
+                            <div className="flex flex-col gap-1 w-full">
+                                <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                    Employee Name
+                                </Typography>
+                                <Input
+                                    size="md"
+                                    color="green"
+                                    crossOrigin={undefined}
+                                    onChange={(e) => setForm((prev) => ({ ...prev, employeeName: e.target.value }))}
+                                    value={form.employeeName}
+                                    name="employeeName"
+                                />
+                                {deductionNameError && (
+                                    <Typography variant="small" color="red">
+                                        {deductionNameErrorMsg}
+                                    </Typography>
+                                )}
+
+                            </div>
+                        </div>
+
+                    </div>
                     {/* End properties */}
 
 
@@ -843,7 +907,7 @@ const CreatePayroll = ({
                                                     <Typography
                                                         variant="small"
                                                         className="font-bold uppercase text-white "
-                                                        >
+                                                    >
                                                         {'ADD'}
                                                     </Typography>
                                                     <PlusIcon strokeWidth={4} className="h-5 w-5 mr-2" />
@@ -866,7 +930,7 @@ const CreatePayroll = ({
                                                     <Badge
                                                         content={"x"}
                                                         onClick={() => handleDeleteDeductionType(index)}
-                                                        // bgColor="red"
+                                                    // bgColor="red"
                                                     >
                                                         <Chip
                                                             value={list.label}
@@ -892,103 +956,103 @@ const CreatePayroll = ({
                             return (
                                 <div key={`deductions-${index}`}>
 
-                                <div className="flex flex-row justify-between gap-4">
-                                    <div className="w-full">
-                                        <Typography variant={'paragraf'} className={'mb-1.5'}>
-                                            Deduction type
-                                        </Typography>
-
-                                        <Select
-                                            options={deductionType}
-                                            placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Deduction Type ...</Typography>}
-                                            onChange={(event) => handleFormDeductionChange(index, event, "dropdown")}
-                                            name="name"
-                                            value={!isEmpty(list.name) ? {
-                                                label: list.name,
-                                                value: index + 1,
-                                            } : null}
-                                            {...SelectProps}
-                                        />
-                                        {formDeductionsError.map((listError: any, indexError) => (
-                                            <div key={`listDedeductionError${indexError}`}>
-                                                {index === indexError && (
-                                                    <Typography variant="small" color="red">
-                                                        {listError.errorDeductionType}
-                                                    </Typography>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    
-                                    <div className="w-full">
-                                        <Typography variant={'paragraf'} className={'mb-1.5'}>
-                                            {'Amount'}
-                                        </Typography>
-                                        
-                                        <div className="relative flex w-full max-w-full">
-                                        <Button
-                                            ripple={false}
-                                            variant="text"
-                                            color="blue-gray"
-                                            className="flex h-10 items-center gap-2 rounded-r-none border border-r-0 border-green-500 bg-blue-gray-500/10 pl-3 w-2"
-                                        >
-                                            <Typography className="text-green-500 font-normal" variant={'small'}>
-                                                Rp
+                                    <div className="flex flex-row justify-between gap-4">
+                                        <div className="w-full">
+                                            <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                                Deduction type
                                             </Typography>
-                                        </Button>
-                                        <Input
-                                            className="rounded-l-none !border-t-green-500 focus:!border-t-green-500 placeholder:text-green-500"
-                                            labelProps={{
-                                                className: "before:content-none after:content-none",
-                                            }}
-                                            containerProps={{ className: "min-w-0" }}
-                                            type={'tel'}
-                                            success
-                                            size="md"
-                                            onChange={(event) => handleFormDeductionChange(index, event, "amount")}
-                                            name="amount"
-                                            value={list.amount}
-                                            crossOrigin={undefined}
-                                            placeholder="Type amount ..."
-                                        />
-                                    </div>
-                                        {formError.map((listError: any, indexError) => (
-                                            <div key={`listDeductionError${indexError}`}>
-                                                {index === indexError && (
-                                                    <Typography variant="small" color="red">
-                                                        {listError.errorAmount}
+
+                                            <Select
+                                                options={deductionType}
+                                                placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Deduction Type ...</Typography>}
+                                                onChange={(event) => handleFormDeductionChange(index, event, "dropdown")}
+                                                name="name"
+                                                value={!isEmpty(list.name) ? {
+                                                    label: list.name,
+                                                    value: index + 1,
+                                                } : null}
+                                                {...SelectProps}
+                                            />
+                                            {formDeductionsError.map((listError: any, indexError) => (
+                                                <div key={`listDedeductionError${indexError}`}>
+                                                    {index === indexError && (
+                                                        <Typography variant="small" color="red">
+                                                            {listError.errorDeductionType}
+                                                        </Typography>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="w-full">
+                                            <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                                {'Amount'}
+                                            </Typography>
+
+                                            <div className="relative flex w-full max-w-full">
+                                                <Button
+                                                    ripple={false}
+                                                    variant="text"
+                                                    color="blue-gray"
+                                                    className="flex h-10 items-center gap-2 rounded-r-none border border-r-0 border-green-500 bg-blue-gray-500/10 pl-3 w-2"
+                                                >
+                                                    <Typography className="text-green-500 font-normal" variant={'small'}>
+                                                        Rp
                                                     </Typography>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    <div className="flex flex-row items-center gap-2 w-36 mt-10">
-                                        
-                                        {deductions.length > 1 && (
-                                            <div className="mb-2">
-                                                <TrashIcon
-                                                    onClick={() => handleDeleteDeductions(index)} 
-                                                    className={'w-5 h-5 cursor-pointer text-red-500'}
+                                                </Button>
+                                                <Input
+                                                    className="rounded-l-none !border-t-green-500 focus:!border-t-green-500 placeholder:text-green-500"
+                                                    labelProps={{
+                                                        className: "before:content-none after:content-none",
+                                                    }}
+                                                    containerProps={{ className: "min-w-0" }}
+                                                    type={'tel'}
+                                                    success
+                                                    size="md"
+                                                    onChange={(event) => handleFormDeductionChange(index, event, "amount")}
+                                                    name="amount"
+                                                    value={list.amount}
+                                                    crossOrigin={undefined}
+                                                    placeholder="Type amount ..."
                                                 />
                                             </div>
-                                        )}
+                                            {formError.map((listError: any, indexError) => (
+                                                <div key={`listDeductionError${indexError}`}>
+                                                    {index === indexError && (
+                                                        <Typography variant="small" color="red">
+                                                            {listError.errorAmount}
+                                                        </Typography>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                        {lastIndexDeductions === index && (
-                                            <div className="mb-2">
-                                                <PlusCircleIcon 
-                                                    onClick={handleAddDeductions} 
-                                                    className={'w-5 h-5 cursor-pointer text-blue-500'}
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="flex flex-row items-center gap-2 w-36 mt-10">
+
+                                            {deductions.length > 1 && (
+                                                <div className="mb-2">
+                                                    <TrashIcon
+                                                        onClick={() => handleDeleteDeductions(index)}
+                                                        className={'w-5 h-5 cursor-pointer text-red-500'}
+                                                    />
+                                                </div>
+                                            )}
+
+                                            {lastIndexDeductions === index && (
+                                                <div className="mb-2">
+                                                    <PlusCircleIcon
+                                                        onClick={handleAddDeductions}
+                                                        className={'w-5 h-5 cursor-pointer text-blue-500'}
+                                                    />
+                                                </div>
+                                            )}
+
+
+                                        </div>
 
 
                                     </div>
-
-                                    
                                 </div>
-                            </div>
                             )
                         })}
 
@@ -1002,7 +1066,7 @@ const CreatePayroll = ({
                                 <Typography
                                     variant="small"
                                     className="font-bold uppercase text-white "
-                                    >
+                                >
                                     {'Reset'}
                                 </Typography>
                                 <div>
@@ -1013,9 +1077,9 @@ const CreatePayroll = ({
                                 disabled={isLoading}
                                 variant="filled"
                                 color={'green'}
-                                className={'p-2 w-32 ml-4 flex mb-4 justify-center' }
+                                className={'p-2 w-32 ml-4 flex mb-4 justify-center'}
                                 onClick={dataEdit ? handleSubmitEditPayroll : handleSubmitPayroll}
-                            >   
+                            >
                                 <div className="flex flex-row gap-2 items-center">
                                     {isLoading ? (
                                         <>
@@ -1025,7 +1089,7 @@ const CreatePayroll = ({
                                             >
                                                 {'Loading'}
                                             </Typography>
-                                            <Spinner color="blue" className="h-4 w-4 mr-2 mt-0.5"/>
+                                            <Spinner color="blue" className="h-4 w-4 mr-2 mt-0.5" />
                                         </>
                                     ) : (
                                         <>
@@ -1047,7 +1111,7 @@ const CreatePayroll = ({
 
                 </div>
             </CardBody>
-            
+
         </Card>
     )
 }

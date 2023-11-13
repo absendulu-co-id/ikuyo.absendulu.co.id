@@ -6,13 +6,18 @@ import {
   Spinner,
   Switch,
 } from "@material-tailwind/react";
-import { InputDatePicker } from "@/app/components";
+import { InputDatePicker, TableLoading } from "@/app/components";
 import makeAnimated from "react-select/animated";
 import Select from "react-select";
 import { GetDataPositionResponse } from "@/interface/position";
 import { GetDataAreaResponse } from "@/interface/area";
 import { GetDataShift, GetDataSubscribe } from "@/interface/company";
 import CustomSelect from "@/app/components/atoms/CustomSelect";
+import MapPicker from "react-google-map-picker";
+import PlacesAutocomplete, {
+  geocodeByAddress,
+  getLatLng,
+} from "react-places-autocomplete";
 
 export interface IEmployeeProps {
   addClicked?: boolean;
@@ -27,6 +32,7 @@ export interface IEmployeeProps {
   dataShift?: GetDataShift[] | null;
   dataSubscribe?: GetDataSubscribe[] | null;
 }
+
 
 export default function AddEmployee({
   addClicked,
@@ -114,6 +120,39 @@ export default function AddEmployee({
 
   const [isMobile, setIsMobile] = useState<number>(1);
 
+  //* Map
+  const DefaultZoom = 10;
+  const DefaultLocation = { lat: -6.2087634, lng: 106.845599 };
+  const [address, setAddress] = useState("");
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+  const [zoom, setZoom] = useState(DefaultZoom);
+  const [location, setLocation] = useState<any>(DefaultLocation);
+
+  function handleChangeLocation(latitude, longitude) {
+    setLocation({ latitude, longitude });
+    setAddress(""); // Clear the address when location changes
+    setForm({ ...form, latitude, longitude });
+  }
+
+  function handleChangeZoom(newZoom) {
+    setZoom(newZoom);
+  }
+
+  const handleSelect = async (address) => {
+    setAddress(address);
+    try {
+      if (typeof address === "string") {
+        const results = await geocodeByAddress(address);
+        const latLng = await getLatLng(results[0]);
+        setLocation(latLng);
+        setForm({ ...form, latitude: latLng.lat, longitude: latLng.lng })
+      }
+    } catch (error) {
+      console.error("Error while geocoding address:", error);
+    }
+  };
+
+
   const handleInputChange = (event) => {
     setForm((prevValue) => {
       return {
@@ -135,6 +174,14 @@ export default function AddEmployee({
   };
 
   useEffect(() => {
+    const handleGoogleMapsLoad = () => setGoogleMapsLoaded(true);
+    const googleMapsScript = document.createElement("script");
+    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyAuyS1LLibOZOGt-eliwsfzzTSYb3fVkmQ&libraries=places`;
+    googleMapsScript.async = true;
+    googleMapsScript.onload = handleGoogleMapsLoad;
+    document.body.appendChild(googleMapsScript);
+
+
     if (form.areaCode && form.areaId && form.areaName) {
       const dataAreas = form.areaName.split(",").map((value) => value.trim());
       const dataAreasId = form.areaId.split(",").map((value) => value.trim());
@@ -147,20 +194,22 @@ export default function AddEmployee({
       }));
       setSelectedOption(objectArea);
     }
+
+    return () => { document.body.removeChild(googleMapsScript) };
   }, []);
 
   const handleSelected = (selectedOptions) => {
     if (selectedOptions) {
-    setSelectedOption(selectedOptions);
-    setForm((prevValue) => {
-      return {
-        ...prevValue,
-        areaName: selectedOptions.map((option: any) => option.label),
-        areaId: selectedOptions.map((option: any) => option.value[0]),
-        areaCode: selectedOptions.map((option: any) => option.value[1]),
-      };
-    });
-  }
+      setSelectedOption(selectedOptions);
+      setForm((prevValue) => {
+        return {
+          ...prevValue,
+          areaName: selectedOptions.map((option: any) => option.label),
+          areaId: selectedOptions.map((option: any) => option.value[0]),
+          areaCode: selectedOptions.map((option: any) => option.value[1]),
+        };
+      });
+    }
   };
 
   const handleSelectChange = (field, selectedOptions) => {
@@ -254,7 +303,8 @@ export default function AddEmployee({
       }));
     }
   };
-  
+
+  if (!googleMapsLoaded) return <div>Google Map Loading</div>
   return (
     <div className="inset-2 mb-8 flex flex-col gap-12">
       <form className="p-5">
@@ -376,9 +426,9 @@ export default function AddEmployee({
           <CustomSelect
             placeholder="Employee Area"
             options={generateAreaOptions(dataArea)}
-            isMulti = {true}
+            isMulti={true}
             value={selectedOption}
-            onChange={(selected)=>handleSelected(selected)}
+            onChange={(selected) => handleSelected(selected)}
           />
 
           <CustomSelect
@@ -403,9 +453,9 @@ export default function AddEmployee({
             value={
               form.workTypeId != ""
                 ? {
-                    value: form.workTypeId,
-                    label: form.workTypeName,
-                  }
+                  value: form.workTypeId,
+                  label: form.workTypeName,
+                }
                 : null
             }
             options={generateSelectOptions(
@@ -423,9 +473,9 @@ export default function AddEmployee({
             value={
               form.shiftId != ""
                 ? {
-                    label: form.shiftName,
-                    value: form.shiftId,
-                  }
+                  label: form.shiftName,
+                  value: form.shiftId,
+                }
                 : null
             }
             options={generateSelectOptions(dataShift, "id", "shiftName")}
@@ -439,9 +489,9 @@ export default function AddEmployee({
             value={
               form.departmentCode != ""
                 ? {
-                    value: [form.departmentCode, " - ", form.positionCode],
-                    label: [form.departmentName, " - ", form.positionName],
-                  }
+                  value: [form.departmentCode, " - ", form.positionCode],
+                  label: [form.departmentName, " - ", form.positionName],
+                }
                 : null
             }
             options={generatePositionOptions(dataPosition)}
@@ -460,7 +510,7 @@ export default function AddEmployee({
               });
             }}
           />
-          
+
           <InputDatePicker
             label="Effective Start"
             value={
@@ -476,15 +526,16 @@ export default function AddEmployee({
             }}
           />
 
+
           {!addClicked && (
             <>
               <CustomSelect
                 value={
                   form.isResign
                     ? {
-                        value: true,
-                        label: 'Yes',
-                      }
+                      value: true,
+                      label: 'Yes',
+                    }
                     : {
                       value: false,
                       label: 'No',
@@ -543,6 +594,81 @@ export default function AddEmployee({
               onChange={handleSwitchChange}
             />
           )}
+          <div className="flex flex-col gap-1 w-full" style={{ gridColumn: 'span 2' }}>
+
+            <PlacesAutocomplete
+              value={address}
+              onChange={setAddress}
+              onSelect={handleSelect}
+            >
+              {({
+                getInputProps,
+                suggestions,
+                getSuggestionItemProps,
+                loading
+              }) => (
+                <div>
+                  <input
+                    {...getInputProps({ placeholder: "Search Places..." })}
+                    className="p-3 border-2 text-lg"
+                    style={{
+                      borderRadius: 1,
+                      borderColor: "gray",
+                      boxShadow: "0 0 0 1px gray",
+                      width: "100%",
+                      padding: "4px",
+                    }}
+                  />
+                  {loading ? <p>Loading</p> : (
+                    <div>
+                      {suggestions.map((suggestion, index) => (
+                        <div
+                          {...getSuggestionItemProps(suggestion, { key: index })}
+                          className="p-3 border-2 text-lg"
+                          style={{
+                            borderRadius: 6,
+                            borderColor: "gray",
+                            boxShadow: "0 0 0 1px gray",
+                          }}
+                          key={index}
+                        >
+                          {suggestion.description}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                </div>
+              )}
+            </PlacesAutocomplete>
+          </div>
+          <Input
+            name="latitude"
+            defaultValue={form.latitude}
+            label="Latitude"
+            color="green"
+            onChange={handleInputChange}
+            required
+            crossOrigin={undefined}
+          />
+          <Input
+            name="longitude"
+            defaultValue={form.longitude}
+            label="Longitude"
+            color="green"
+            onChange={handleInputChange}
+            required
+            crossOrigin={undefined}
+          />
+          <MapPicker
+            defaultLocation={location}
+            zoom={zoom}
+            mapTypeId="roadmap"
+            style={{ height: "300px" }}
+            onChangeLocation={handleChangeLocation}
+            onChangeZoom={handleChangeZoom}
+            apiKey="AIzaSyAuyS1LLibOZOGt-eliwsfzzTSYb3fVkmQ"
+          />
         </div>
         <div
           className={`${addClicked ? "mt-0" : "mt-5"} flex flex-row-reverse`}
@@ -566,8 +692,8 @@ export default function AddEmployee({
               form.workTypeId == "" ||
               form.shiftId == "" ||
               form.positionCode == "" ||
-              !form.joinDate || 
-              !form.effectiveStart 
+              !form.joinDate ||
+              !form.effectiveStart
             }
             className={"ml-4 mb-4 flex w-28 flex-row justify-center p-2"}
             onClick={addClicked ? handleSave : onEdit}
