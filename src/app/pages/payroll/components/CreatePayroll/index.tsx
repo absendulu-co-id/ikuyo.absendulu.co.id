@@ -141,6 +141,17 @@ const CreatePayroll = ({
             value: 'Daily',
         },
     ];
+
+    const incentiveSelect = [
+        {
+            label: 'Ya',
+            value: 'Ya',
+        },
+        {
+            label: 'Tidak',
+            value: 'Tidak',
+        },
+    ];
     const [deductionType, setDeductionType] = useState<any>(defaultDeductionType);
     const handleDeleteDeductionType = (index) => {
         let data = [...deductionType];
@@ -439,7 +450,8 @@ const CreatePayroll = ({
             positionName: form.positionName,
             properties: newObj,
             deductions: newObjDeduction,
-            payrollType: form.payrollType
+            payrollType: form.payrollType,
+            incentive: form.incentive
         };
 
         setIsLoading(true);
@@ -826,6 +838,34 @@ const CreatePayroll = ({
                             {positionError && (
                                 <Typography variant="small" color="red">
                                     Please select Payrol Type
+                                </Typography>
+                            )}
+                        </div>
+                        <div>
+                            <Typography variant={'paragraph'} className={'mb-1.5'}>
+                                Incentive On Time
+                            </Typography>
+
+                            <Select
+                                onChange={(selected: any) => {
+                                    setForm((prevValue) => {
+                                        return {
+                                            ...prevValue,
+                                            incentive: selected.value,
+                                            incentiveLabel: selected.label
+                                        }
+                                    })
+                                    setPositionError(false);
+
+                                }}
+                                options={incentiveSelect}
+                                value={!isEmpty(form.incentive) ? { label: form.incentiveLabel, value: form.incentive } : null}
+                                placeholder={<Typography variant="small" className="text-green-500 font-normal">Select Incentive ...</Typography>}
+                                {...SelectProps}
+                            />
+                            {positionError && (
+                                <Typography variant="small" color="red">
+                                    Please select Incentive
                                 </Typography>
                             )}
                         </div>
