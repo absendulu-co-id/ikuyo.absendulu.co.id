@@ -31,7 +31,7 @@ import store from "@/redux/Store";
 import { snackBar } from "@/utils/snackbar";
 
 export function Attendance() {
-  const [dataAttendances, setDataAttendances] = useState<GetDataAttendances[] | null >(null)
+  const [dataAttendances, setDataAttendances] = useState<GetDataAttendances[] | null>(null)
   const [selectedAll, setSelectedAll] = useState<boolean>(false);
   const [listSelected, setListSelected] = useState<Array<object>>([]);
   const [query, setQuery] = useState<string | null>(null);
@@ -66,12 +66,12 @@ export function Attendance() {
   const dispatch = useDispatch()
   const searchData = useRecoilValue(searchAllAtom);
 
-  const getAttendancePagination = async(params) => {
+  const getAttendancePagination = async (params) => {
     dispatch(setLoading(true))
 
     try {
       const response = await getDataAttendancePagination(params) as GetAttendanceResponse
-      if(response.data.length > 0){
+      if (response.data.length > 0) {
         setTotalPage(response.totalPages);
         setDataAttendances(response.data);
       } else {
@@ -85,26 +85,26 @@ export function Attendance() {
   };
 
   useEffect(() => {
-    if(searchData) {
+    if (searchData) {
       const delaySearch = setTimeout(() => {
         setQuery(searchData);
       }, 1500)
-  
+
       return () => clearTimeout(delaySearch)
     } else {
-      if(dataAttendances) {
+      if (dataAttendances) {
         const delaySearch = setTimeout(() => {
           setQuery("");
         }, 1500)
-    
+
         return () => clearTimeout(delaySearch)
       } else setQuery("")
     }
-  },[searchData])
+  }, [searchData])
 
   useEffect(() => {
-    if(query !== null) {
-      if(query.length > 0) {
+    if (query !== null) {
+      if (query.length > 0) {
         const params = {
           search: isEmpty(query) ? null : query,
         }
@@ -134,24 +134,24 @@ export function Attendance() {
 
   const handleSelected = (data: GetDataAttendances) => {
 
-    if(listSelected.includes(data)) {
+    if (listSelected.includes(data)) {
       const arrayFilter = listSelected.filter(e => e !== data)
       setListSelected(arrayFilter);
-      
-    } else {  
+
+    } else {
       setListSelected([...listSelected, data]);
     }
   }
 
   const handleCheckAll = () => {
-    if(selectedAll) {
+    if (selectedAll) {
       setListSelected([]);
       setSelectedAll(false);
     } else {
       setListSelected(dataAttendances || []);
       setSelectedAll(true);
     }
-    
+
   }
 
   const handleExportData = async () => {
@@ -167,7 +167,7 @@ export function Attendance() {
       snackBar("success", "Data Attendance successfully downloaded");
       dispatch(setLoading(false));
     }
-    
+
   }
 
   return (
@@ -180,31 +180,31 @@ export function Attendance() {
         </CardHeader>
         <div className='flex flex-row gap-1'>
           {dataAttendances && (
-            <Badge invisible={listSelected.length === 0}  content={listSelected.length}>
+            <Badge invisible={listSelected.length === 0} content={listSelected.length}>
               <Button
-              variant="filled"
-              color={'blue'}
-              className={`p-2 ${listSelected.length > 0 ? 'w-30' : 'w-34 '} ml-4 flex mb-4 justify-center`}
-              onClick={handleExportData}            
+                variant="filled"
+                color={'blue'}
+                className={`p-2 ${listSelected.length > 0 ? 'w-30' : 'w-34 '} ml-4 flex mb-4 justify-center`}
+                onClick={handleExportData}
               >
                 <ArrowUpTrayIcon strokeWidth={5} className="h-4 w-4 mr-2 mt-[1px]" />
                 <Typography
-                    variant="small"
-                    className="font-bold uppercase text-white "
-                  >
-                    {`${listSelected.length > 0 ? 'Export' : 'Export All'}`}
-                  </Typography>
+                  variant="small"
+                  className="font-bold uppercase text-white "
+                >
+                  {`${listSelected.length > 0 ? 'Export' : 'Export All'}`}
+                </Typography>
               </Button>
             </Badge>
-          )} 
+          )}
         </div>
         <CardBody className="overflow-x-scroll px-0 pt-0 pb-10">
           <table className="w-full min-w-[640px] table-auto">
             <thead>
               <tr>
-                {dataAttendances && 
+                {dataAttendances &&
                   <th className="border-b border-blue-gray-50 w-[2px] pl-2 text-center">
-                    <Checkbox color="green" checked={selectedAll} onClick={handleCheckAll} crossOrigin={undefined}  />
+                    <Checkbox color="green" checked={selectedAll} onClick={handleCheckAll} crossOrigin={undefined} />
                   </th>
                 }
                 {dataTable.map((data) => (
@@ -224,17 +224,16 @@ export function Attendance() {
             </thead>
             <tbody>
               {dataAttendances && dataAttendances.map(
-                ( data: GetDataAttendances, index) => {
-                  const className = `py-3 px-5 ${
-                    index === authorsTableData.length - 1
+                (data: GetDataAttendances, index) => {
+                  const className = `py-3 px-5 ${index === authorsTableData.length - 1
                       ? ""
                       : "border-b border-blue-gray-50"
-                  }`;
+                    }`;
 
                   return (
                     <tr key={index}>
                       <td className="border-b border-blue-gray-50 pl-2">
-                        <Checkbox color="green" checked={listSelected.includes(data)} onClick={() => handleSelected(data)} crossOrigin={undefined}/>
+                        <Checkbox color="green" checked={listSelected.includes(data)} onClick={() => handleSelected(data)} crossOrigin={undefined} />
                       </td>
                       <td className={className}>
                         <Typography
@@ -269,7 +268,7 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold"
                         >
-                          {data.employeeShift ? data.employeeShift : '-' }
+                          {data.employeeShift ? data.employeeShift : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -287,7 +286,7 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold truncate ..."
                         >
-                          {data.clockInAddress.slice(0, 20)} ...
+                          {data.clockInAddress?.slice(0, 20)} ...
                         </Typography>
                       </td>
                       <td className={className}>
@@ -296,7 +295,7 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold"
                         >
-                          {data.clockInMethod ? data.clockInMethod : '-' }
+                          {data.clockInMethod ? data.clockInMethod : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -305,7 +304,7 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold"
                         >
-                          {data.clockInNote ? data.clockInNote : '-' }
+                          {data.clockInNote ? data.clockInNote : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -332,7 +331,7 @@ export function Attendance() {
                           color="blue-gray"
                           className={`text-xs font-semibold`}
                         >
-                          {data.clockOut ? data.clockOut : '-' }
+                          {data.clockOut ? data.clockOut : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -350,7 +349,7 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold"
                         >
-                          {data.clockOutMethod ? data.clockOutMethod : '-' }
+                          {data.clockOutMethod ? data.clockOutMethod : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
@@ -359,29 +358,29 @@ export function Attendance() {
                           color="blue-gray"
                           className="text-xs font-semibold"
                         >
-                          {data.clockOutNote ? data.clockOutNote : '-' }
+                          {data.clockOutNote ? data.clockOutNote : '-'}
                         </Typography>
                       </td>
                       <td className={className}>
                         <div className="flex justify-center">
-                          {!data.clockoutPhoto ? 
-                          <EyeSlashIcon
-                            color="#66BB6A"
-                            className="h-4 w-4 cursor-pointer"
-                          />
-                          : <EyeIcon
-                            color="#66BB6A"
-                            className="h-4 w-4 cursor-pointer"
-                            onClick={() =>
-                              setIFrameState({
-                                ...iframeState,
-                                showIFrameForm: true,
-                                varname: data.employeeName,
-                                varphoto: data.clockoutPhoto,
-                                varaddress: data.clockOutAddress,
-                                varclockin: data.clockOut,
-                              })
-                            }
+                          {!data.clockoutPhoto ?
+                            <EyeSlashIcon
+                              color="#66BB6A"
+                              className="h-4 w-4 cursor-pointer"
+                            />
+                            : <EyeIcon
+                              color="#66BB6A"
+                              className="h-4 w-4 cursor-pointer"
+                              onClick={() =>
+                                setIFrameState({
+                                  ...iframeState,
+                                  showIFrameForm: true,
+                                  varname: data.employeeName,
+                                  varphoto: data.clockoutPhoto,
+                                  varaddress: data.clockOutAddress,
+                                  varclockin: data.clockOut,
+                                })
+                              }
                             />
                           }
                         </div>
@@ -393,14 +392,14 @@ export function Attendance() {
             </tbody>
           </table>
           {dataAttendances && totalPage > 1 ? (
-          <Pagination
-            onChange={handleChangePage}
-            total={totalPage}
-            current={currentPage}
-          />
-        ): store.getState() && !dataAttendances ? (
-          <NoData/>
-        ): null}
+            <Pagination
+              onChange={handleChangePage}
+              total={totalPage}
+              current={currentPage}
+            />
+          ) : store.getState() && !dataAttendances ? (
+            <NoData />
+          ) : null}
         </CardBody>
       </Card>
       <IFrame
